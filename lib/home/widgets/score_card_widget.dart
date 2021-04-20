@@ -48,7 +48,7 @@ class ScoreCardWidget extends StatelessWidget {
                           style: AppTextStyles.heading,
                         ),
                         Text(
-                          "Complete the challeges and grow up in knowledge!",
+                          "Complete the challenges and grow up in knowledge!",
                           style: AppTextStyles.body,
                         )
                       ],
