@@ -1,5 +1,6 @@
 import 'package:dev_quiz/challenge/question_indicator_widget.dart';
 import 'package:dev_quiz/challenge/quiz_widget.dart';
+import 'package:dev_quiz/result_page.dart';
 import 'package:dev_quiz/shared/models/question_model.dart';
 import 'package:flutter/material.dart';
 import 'package:dev_quiz/challenge/next_button_widget.dart';
@@ -7,7 +8,10 @@ import 'challenge_controller.dart';
 
 class ChallengePage extends StatefulWidget {
   final List<QuestionModel> questions;
-  ChallengePage({Key? key, required this.questions}) : super(key: key);
+  final String title;
+
+  ChallengePage({Key? key, required this.questions, required this.title})
+      : super(key: key);
 
   @override
   _ChallengePageState createState() => _ChallengePageState();
@@ -30,6 +34,13 @@ class _ChallengePageState extends State<ChallengePage> {
     if (challengeController.currentPage < widget.questions.length)
       pageController.nextPage(
           duration: Duration(microseconds: 300), curve: Curves.linear);
+  }
+
+  void onSelected(bool value) {
+    if (value) {
+      challengeController.hits++;
+    }
+    nextPage();
   }
 
   @override
@@ -62,7 +73,7 @@ class _ChallengePageState extends State<ChallengePage> {
         physics: NeverScrollableScrollPhysics(),
         controller: this.pageController,
         children: widget.questions
-            .map((e) => QuizWidget(question: e, onChange: this.nextPage))
+            .map((e) => QuizWidget(question: e, onSelected: onSelected))
             .toList(),
       ),
       bottomNavigationBar: SafeArea(
@@ -86,13 +97,21 @@ class _ChallengePageState extends State<ChallengePage> {
                   // SizedBox(
                   //   width: 7,
                   // ),
-                if (value == widget.questions.length)
-                  Expanded(
-                      child: NextButtonWidget.green(
-                          label: 'Finish',
-                          onTap: () {
-                            Navigator.pop(context);
-                          })),
+                  if (value == widget.questions.length)
+                    Expanded(
+                        child: NextButtonWidget.green(
+                            label: 'Finish',
+                            onTap: () {
+                              //Navigator.pop(context);
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ResultPageWidget(
+                                            title: widget.title,
+                                            length: widget.questions.length,
+                                            result: challengeController.hits,
+                                          )));
+                            })),
               ],
             ),
           ),
