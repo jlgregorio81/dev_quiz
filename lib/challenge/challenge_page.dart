@@ -1,27 +1,102 @@
 import 'package:dev_quiz/challenge/question_indicator_widget.dart';
 import 'package:dev_quiz/challenge/quiz_widget.dart';
+import 'package:dev_quiz/shared/models/question_model.dart';
 import 'package:flutter/material.dart';
+import 'package:dev_quiz/challenge/next_button_widget.dart';
+import 'challenge_controller.dart';
 
 class ChallengePage extends StatefulWidget {
-  ChallengePage({Key? key}) : super(key: key);
+  final List<QuestionModel> questions;
+  ChallengePage({Key? key, required this.questions}) : super(key: key);
 
   @override
   _ChallengePageState createState() => _ChallengePageState();
 }
 
 class _ChallengePageState extends State<ChallengePage> {
+  final challengeController = ChallengeController();
+  final pageController = PageController();
+
+  @override
+  void initState() {
+    pageController.addListener(() {
+      challengeController.currentPage = pageController.page!.toInt() + 1;
+    });
+
+    super.initState();
+  }
+
+  void nextPage() {
+    if (challengeController.currentPage < widget.questions.length)
+      pageController.nextPage(
+          duration: Duration(microseconds: 300), curve: Curves.linear);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60),
+        preferredSize: Size.fromHeight(110),
         child: SafeArea(
           top: true,
-          child: QuestionIndicatorWidget(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  }),
+              ValueListenableBuilder<int>(
+                valueListenable: challengeController.currentPageNotifier,
+                builder: (context, value, _) => QuestionIndicatorWidget(
+                  currentPage: value,
+                  length: widget.questions.length,
+                ),
+              )
+            ],
+          ),
         ),
       ),
-      body: QuizWidget(
-        title: "What does the Flutter do?",
+      body: PageView(
+        physics: NeverScrollableScrollPhysics(),
+        controller: this.pageController,
+        children: widget.questions
+            .map((e) => QuizWidget(question: e, onChange: this.nextPage))
+            .toList(),
+      ),
+      bottomNavigationBar: SafeArea(
+        bottom: true,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: ValueListenableBuilder<int>(
+            valueListenable: challengeController.currentPageNotifier,
+            builder: (context, value, _) => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (value < widget.questions.length)
+                  Expanded(
+                      child: NextButtonWidget.white(
+                    label: "Skip",
+                    onTap: () {
+                      this.nextPage();
+                    },
+                  )),
+                if (value == widget.questions.length)
+                  // SizedBox(
+                  //   width: 7,
+                  // ),
+                if (value == widget.questions.length)
+                  Expanded(
+                      child: NextButtonWidget.green(
+                          label: 'Finish',
+                          onTap: () {
+                            Navigator.pop(context);
+                          })),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
